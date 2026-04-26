@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 import re
+import types
 from collections import Counter
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any
 
 TOKEN_PATTERN = re.compile(r"[A-Za-z0-9']+")
 SENTENCE_PATTERN = re.compile(r"(?<=[.!?])\s+")
@@ -58,6 +60,7 @@ STOPWORDS = {
 
 @dataclass(slots=True)
 class Chunk:
+    """Represents a chunk extracted from the PDF."""
     chunk_id: int
     page_number: int
     text: str
@@ -65,17 +68,20 @@ class Chunk:
 
 @dataclass(slots=True)
 class SearchHit:
+    """A text chunk alongside its relevance score."""
     chunk: Chunk
     score: float
 
 
 @dataclass(slots=True)
 class PaperIndex:
+    """JSON serializable wrapper storing the paper's chunks."""
     pdf_path: str
     chunk_size: int
     chunks: list[Chunk]
 
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to a basic dictionary."""
         return {
             "pdf_path": self.pdf_path,
             "chunk_size": self.chunk_size,
@@ -83,7 +89,8 @@ class PaperIndex:
         }
 
     @classmethod
-    def from_dict(cls, payload: dict[str, object]) -> "PaperIndex":
+    def from_dict(cls, payload: dict[str, Any]) -> PaperIndex:
+        """Deserialize from basic dictionary."""
         raw_chunks = payload.get("chunks", [])
         chunks = [Chunk(**raw_chunk) for raw_chunk in raw_chunks]
         return cls(
@@ -94,6 +101,7 @@ class PaperIndex:
 
 
 def build_index(pdf_path: Path, index_path: Path, chunk_size: int = 1200) -> PaperIndex:
+    """Builds and serializes a lexical index over the given PDF file."""
     pdf_module = _require_pypdf()
     reader = pdf_module.PdfReader(str(pdf_path))
     chunks: list[Chunk] = []
@@ -121,11 +129,13 @@ def build_index(pdf_path: Path, index_path: Path, chunk_size: int = 1200) -> Pap
 
 
 def load_index(index_path: Path) -> PaperIndex:
+    """Loads a previously saved PaperIndex from disk."""
     payload = json.loads(index_path.read_text(encoding="utf-8"))
     return PaperIndex.from_dict(payload)
 
 
 def search_index(question: str, paper_index: PaperIndex, top_k: int = 4) -> list[SearchHit]:
+    """Find the top_k most relevant chunks using a lexical scoring heuristic."""
     question_terms = _tokenize(question)
     if not question_terms:
         return []
@@ -151,6 +161,7 @@ def search_index(question: str, paper_index: PaperIndex, top_k: int = 4) -> list
 
 
 def summarize_hit(hit: SearchHit, limit: int = 280) -> str:
+    """Truncates the search hit text explicitly if necessary."""
     excerpt = hit.chunk.text
     if len(excerpt) > limit:
         excerpt = excerpt[: limit - 3].rstrip() + "..."
@@ -160,7 +171,8 @@ def summarize_hit(hit: SearchHit, limit: int = 280) -> str:
     )
 
 
-def _require_pypdf():
+def _require_pypdf() -> types.ModuleType:
+    """Dynamically loads pypdf to handle PDFs."""
     try:
         import pypdf
     except ModuleNotFoundError as exc:
@@ -285,4 +297,11 @@ def _score_chunk(
         comparison_bonus = 1.5
 
     exact_question_bonus = 1.0 if question_lower in chunk_lower else 0.0
-    return overlap_score + frequency_score + phrase_bonus + concept_bonus + comparison_bonus + exact_question_bonus
+    return (
+        overlap_score
+        + frequency_score
+        + phrase_bonus
+        + concept_bonus
+        + comparison_bonus
+        + exact_question_bonus
+    )

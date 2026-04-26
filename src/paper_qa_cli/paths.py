@@ -14,6 +14,7 @@ DEFAULT_INDEX_PATH = DATA_DIR / "paper_index.json"
 
 
 def resolve_default_pdf_path() -> Path:
+    """Resolve local paper path robustly from the repository root."""
     project_pdf = PROJECT_ROOT / DEFAULT_PDF_NAME
     if project_pdf.exists():
         return project_pdf

@@ -31,6 +31,7 @@ def setup_logging(verbose: bool) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """The entry point for the paper CLI. Parses arguments and delegates commands."""
     parser = _build_parser()
     args = parser.parse_args(argv)
     
@@ -40,7 +41,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "build-index":
             pdf_path = _resolve_pdf_path(args.paper)
             paper_index = build_index(pdf_path, args.index, chunk_size=args.chunk_size)
-            print(f"Indexed {len(paper_index.chunks)} chunks from {pdf_path.name} into {args.index}.")
+            print(
+                f"Indexed {len(paper_index.chunks)} chunks from "
+                f"{pdf_path.name} into {args.index}."
+            )
             return 0
 
         if args.command == "ask":

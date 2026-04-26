@@ -6,6 +6,7 @@ from paper_qa_cli.paper_index import Chunk, PaperIndex, search_index
 
 
 def test_comparison_query_prefers_comparison_chunk() -> None:
+    """Test that comparison terms elevate chunks that contain comparing language."""
     paper_index = PaperIndex(
         pdf_path="paper.pdf",
         chunk_size=500,
@@ -15,7 +16,8 @@ def test_comparison_query_prefers_comparison_chunk() -> None:
                 page_number=1,
                 text=(
                     "LLM systems focus on language understanding and reasoning capabilities, "
-                    "whereas agentic AI systems pursue goals and interact with tools to take actions."
+                    "whereas agentic AI systems pursue goals and interact with tools to take "
+                    "actions."
                 ),
             ),
             Chunk(
@@ -37,6 +39,7 @@ def test_comparison_query_prefers_comparison_chunk() -> None:
 
 
 def test_run_question_refuses_when_paper_has_no_support() -> None:
+    """Ensure we explicitly refuse if the document does not provide context."""
     paper_index = PaperIndex(
         pdf_path="paper.pdf",
         chunk_size=500,
@@ -46,7 +49,8 @@ def test_run_question_refuses_when_paper_has_no_support() -> None:
                 page_number=1,
                 text=(
                     "LLM systems focus on language understanding and reasoning capabilities, "
-                    "whereas agentic AI systems pursue goals and interact with tools to take actions."
+                    "whereas agentic AI systems pursue goals and interact with tools to take "
+                    "actions."
                 ),
             ),
         ],

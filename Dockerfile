@@ -1,23 +1,39 @@
-# Use the official Python base image
-FROM python:3.11-slim
+FROM python:3.11-slim@sha256:6d85378d88a19cd4d76079817532d62232be95757cb45945a99fec8e8084b9c2 AS builder
 
-# Install system dependencies (curl might be useful depending on your actual use cases, but keeping it minimal is best practice)
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    UV_PROJECT_ENVIRONMENT=/app/.venv \
+    PATH="/app/.venv/bin:$PATH"
 
-# Set the working directory
 WORKDIR /app
 
-# Copy the dependency files first to leverage Docker cache
-COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir uv
 
-# Install dependencies directly using pip
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy dependency metadata first to maximize cache hits.
+COPY pyproject.toml uv.lock ./
 
-# Copy the rest of the application code
-COPY . .
+RUN uv sync --frozen --no-dev --no-install-project
 
-# Install the application logic
-RUN pip install -e .
+FROM python:3.11-slim@sha256:6d85378d88a19cd4d76079817532d62232be95757cb45945a99fec8e8084b9c2 AS runtime
 
-# Define the entrypoint for the CLI
-ENTRYPOINT ["paper-cli"]
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/src \
+    PATH="/app/.venv/bin:$PATH"
+
+WORKDIR /app
+
+RUN groupadd --system appuser \
+    && useradd --system --gid appuser --create-home --home-dir /home/appuser appuser
+
+COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
+COPY --chown=appuser:appuser src ./src
+COPY --chown=appuser:appuser data ./data
+
+USER appuser
+
+ENTRYPOINT ["python", "-m", "paper_qa_cli"]
 CMD ["--help"]

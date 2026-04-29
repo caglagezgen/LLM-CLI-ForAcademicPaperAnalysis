@@ -61,6 +61,7 @@ STOPWORDS = {
 @dataclass(slots=True)
 class Chunk:
     """Represents a chunk extracted from the PDF."""
+
     chunk_id: int
     page_number: int
     text: str
@@ -69,6 +70,7 @@ class Chunk:
 @dataclass(slots=True)
 class SearchHit:
     """A text chunk alongside its relevance score."""
+
     chunk: Chunk
     score: float
 
@@ -76,6 +78,7 @@ class SearchHit:
 @dataclass(slots=True)
 class PaperIndex:
     """JSON serializable wrapper storing the paper's chunks."""
+
     pdf_path: str
     chunk_size: int
     chunks: list[Chunk]

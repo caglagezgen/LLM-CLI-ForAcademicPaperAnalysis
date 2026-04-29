@@ -21,8 +21,10 @@ SYSTEM_PROMPT = (
 
 logger = logging.getLogger(__name__)
 
+
 class OllamaError(RuntimeError):
     """Exception raised for errors during Ollama API communication."""
+
     pass
 
 

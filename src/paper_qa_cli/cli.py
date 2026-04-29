@@ -20,6 +20,7 @@ from .paths import DEFAULT_INDEX_PATH, resolve_default_pdf_path
 DEFAULT_MODEL = "llama3"
 logger = logging.getLogger(__name__)
 
+
 def setup_logging(verbose: bool) -> None:
     """Configures the root logger based on verbosity."""
     level = logging.DEBUG if verbose else logging.INFO
@@ -34,7 +35,7 @@ def main(argv: list[str] | None = None) -> int:
     """The entry point for the paper CLI. Parses arguments and delegates commands."""
     parser = _build_parser()
     args = parser.parse_args(argv)
-    
+
     setup_logging(getattr(args, "verbose", False))
 
     try:
@@ -42,8 +43,7 @@ def main(argv: list[str] | None = None) -> int:
             pdf_path = _resolve_pdf_path(args.paper)
             paper_index = build_index(pdf_path, args.index, chunk_size=args.chunk_size)
             print(
-                f"Indexed {len(paper_index.chunks)} chunks from "
-                f"{pdf_path.name} into {args.index}."
+                f"Indexed {len(paper_index.chunks)} chunks from {pdf_path.name} into {args.index}."
             )
             return 0
 

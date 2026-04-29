@@ -8,7 +8,7 @@ This project is a uv-managed Python CLI that answers questions about the supplie
 - It sends those retrieved chunks to the - LLM as context for generation.
 - That is the core RAG pattern: retrieval augmented generation.
 
-
+- Project implements a lightweight, single-document RAG pipeline over one academic PDF. The core idea is simple: first retrieve the most relevant paper excerpts, then ask the local Ollama model to answer using only those excerpts. That control flow is driven from cli.py:111.
 
 ## Features
 
@@ -18,17 +18,29 @@ This project is a uv-managed Python CLI that answers questions about the supplie
 - Uses a local Ollama model such as `llama3`.
 - Refuses to answer when the paper evidence is insufficient.
 
+* Ollama is the local model runtime and API server. It is the software that downloads models, starts a local inference service, and lets your CLI send prompts to that service. llama3 is the actual large language model. More precisely, it is the model family your app asks Ollama to run.
+
+So in this project, the full flow is:
+
+1. The user asks a question in the CLI
+2. The code retrieves relevant paper chunks
+3. those chunks are sent to Ollama
+4. Ollama runs llama3
+5. llama3 returns the answer
+
 ## Current Project Structure
 
 ```text
 .
+├── .dockerignore
 ├── .python-version
+├── compose.yaml
+├── Dockerfile
 ├── README.md
 ├── app.py
-├── CLI Paper-Research Landscape of Agentic AI and LLM - Apps, Challenges and Future Direction.pdf
 ├── data/
+│   ├── CLI Paper-Research Landscape of Agentic AI and LLM - Apps, Challenges and Future Direction.pdf
 │   └── paper_index.json
-├── projectRequirements.md
 ├── pyproject.toml
 ├── src/
 │   └── paper_qa_cli/
@@ -45,8 +57,10 @@ This project is a uv-managed Python CLI that answers questions about the supplie
 
 ## Key Files
 
-- `pyproject.toml`: package metadata, dependencies, pytest settings, and Ruff configuration.
+- `pyproject.toml`: package metadata, dependencies, pytest settings, and Ruff configuration(Ruff is the Python code-quality linting tool).
 - `uv.lock`: locked dependency graph for reproducible environments.
+- `Dockerfile`: production-oriented container image for the CLI.
+- `compose.yaml`: local multi-container setup for the CLI plus Ollama.
 - `src/paper_qa_cli/cli.py`: main CLI entrypoint and command definitions.
 - `src/paper_qa_cli/paper_index.py`: PDF extraction, chunking, indexing, and retrieval.
 - `src/paper_qa_cli/ollama_client.py`: Ollama integration and grounded prompting.
@@ -140,6 +154,48 @@ uv run python -m paper_qa_cli chat
 uv run python app.py chat
 ```
 
+## Docker
+
+Build the CLI image:
+
+```bash
+docker build -t paper-qa-cli .
+```
+
+Check the containerized CLI entrypoint:
+
+```bash
+docker run --rm paper-qa-cli --help
+```
+
+Run the container against an Ollama server already running on your host machine:
+
+```bash
+docker run --rm \
+	-e OLLAMA_URL=http://host.docker.internal:11434/api/generate \
+	paper-qa-cli ask "What differences does the paper identify between LLM systems and agentic AI systems?"
+```
+
+Use Compose when you want Docker to run Ollama for you as well:
+
+```bash
+docker compose up -d ollama
+docker compose exec ollama ollama pull llama3
+docker compose run --rm paper-qa ask "What differences does the paper identify between LLM systems and agentic AI systems?"
+```
+
+Open an interactive chat session through Compose:
+
+```bash
+docker compose run --rm paper-qa chat
+```
+
+Stop the Ollama service when you are done:
+
+```bash
+docker compose down
+```
+
 ## Test And Lint
 
 Run the test suite:
@@ -184,13 +240,71 @@ If `uv run paper-qa ask ...` fails with an Ollama connection error:
 
 If the CLI cannot find the paper automatically:
 
-- Keep the PDF in the project root, or
-- place it under `data/`, or
+- Keep the PDF under `data/`, or
 - pass the file explicitly with `--paper`.
+
 ## Production Preparedness
 
 The repository has been updated to production standards:
+
 - Continuous Integration (CI) configuration file exists for testing and lint testing before deployments (`.github/workflows/ci.yml`).
 - A basic `Dockerfile` exposes a straightforward, easily reproducible CLI environment. (e.g. `docker build -t paper-cli .` followed by `docker run --rm paper-cli --help`).
 - Standardised Logging has been implemented with `logging` allowing to customize the log messages via `-v` / `--verbose` command line parameter substituting typical terminal stack traces with informative, well formatted output.
 
+# Runbook
+
+1. In the first terminal:
+
+```bash
+  ollama serve
+```
+
+2. In the second terminal:
+
+```bash
+uv run paper-qa build-index
+
+```
+
+3. Then ask these five questions:
+
+```bash
+uv run paper-qa ask "What differences does the paper identify between LLM systems and agentic AI systems?"
+```
+
+```bash
+uv run paper-qa ask "How does the paper describe the role of tools or external actions in agentic systems?"
+```
+
+```bash
+uv run paper-qa ask "What challenges or limitations are highlighted for agentic AI systems?"
+```
+
+```bash
+uv run paper-qa ask "What future research directions does the paper suggest?"
+```
+
+```bash
+uv run paper-qa ask "Which capabilities are emphasized for LLM systems compared with agentic systems?"
+```
+
+4. Then ask one unsupported question to show the system refuses to use outside knowledge:
+
+```bash
+uv run paper-qa ask "What does the paper say about marine biology field sampling?"
+```
+
+Expected outcome: the CLI should refuse because the paper does not cover that topic.
+
+5. Dry-run 
+
+```bash
+uv run paper-qa ask "What differences does the paper identify between LLM systems and agentic AI systems?" --dry-run
+
+```
+
+### Why Dry-run matters:
+
+- it proves retrieval happens before answer generation
+- it shows exactly what evidence the system found in the paper
+- it helps to explain grounding very clearly in class

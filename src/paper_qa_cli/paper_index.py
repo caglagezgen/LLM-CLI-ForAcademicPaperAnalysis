@@ -1,11 +1,5 @@
 # Indexing and Retrieval Logic
-# This project uses a classical information retrieval algorithm called TF-IDF (Term Frequency-Inverse Document Frequency) for its search and ranking.
-# Tokenize the Question: First, it breaks your question down into a set of unique, important keywords (tokens). It converts the question to lowercase and removes common "stopwords" (like "a", "the", "is") that don't add much meaning.
-# Calculate TF-IDF Scores: For each keyword from your question, it calculates a TF-IDF (Term Frequency-Inverse Document Frequency) score against every chunk in the paper.
-# Term Frequency (TF): How often does the keyword appear in a specific chunk? (More appearances = higher score).
-# Inverse Document Frequency (IDF): How rare is the keyword across all chunks? (Rarer words like "agentic" are given more weight than common words like "system").
-# Score Each Chunk: The total relevance score for a chunk is the sum of the TF-IDF scores of all the question's keywords found within that chunk.
-# Rank and Select: The chunks are then ranked from highest score to lowest. The system retrieves the top_k chunks (your default is 4).
+# This project uses a classical information retrieval algorithm called TF-IDF
 
 from __future__ import annotations
 

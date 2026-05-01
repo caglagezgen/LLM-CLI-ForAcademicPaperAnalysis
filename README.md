@@ -318,7 +318,7 @@ uv run paper-qa ask "What differences does the paper identify between LLM system
 
 - it proves retrieval happens before answer generation
 - it shows exactly what evidence the system found in the paper
-- it helps to explain grounding very clearly in class
+- it helps to explain grounding very clearly
 
 ## Cloud Deployment Demo (Google Cloud)
 

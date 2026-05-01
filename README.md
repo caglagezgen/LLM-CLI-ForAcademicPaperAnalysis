@@ -348,6 +348,37 @@ Current VM's has memory limit so we will use a smaller model
 # Run the same question with the small model
 sudo docker-compose run paper-qa ask --model tinyllama "What differences does the paper identify between LLM systems and agentic AI systems?"
 ```
+- Then ask these five questions:
+
+```bash
+sudo docker-compose run paper-qa ask --model tinyllama "What differences does the paper identify between LLM systems and agentic AI systems?"
+```
+
+```bash
+sudo docker-compose run paper-qa ask --model tinyllama "How does the paper describe the role of tools or external actions in agentic systems?"
+```
+
+```bash
+sudo docker-compose run paper-qa ask --model tinyllama  "What challenges or limitations are highlighted for agentic AI systems?"
+```
+
+```bash
+sudo docker-compose run paper-qa ask --model tinyllama  "What future research directions does the paper suggest?"
+```
+
+```bash
+sudo docker-compose run paper-qa ask --model tinyllama  "Which capabilities are emphasized for LLM systems compared with agentic systems?"
+```
+```bash
+sudo docker-compose run paper-qa ask --model tinyllama  "What is meant by multi agent systems"
+```
+
+- Then ask one unsupported question to show the system refuses to use outside knowledge:
+
+```bash
+sudo docker-compose run paper-qa ask --model tinyllama  "What does the paper say about marine biology field sampling?"
+```
+
 
 ```bash
 # Ask a question that is not in the paper

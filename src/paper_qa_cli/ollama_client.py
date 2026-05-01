@@ -1,4 +1,5 @@
 # Ollama integration
+# This template gives the model very specific instructions on how to behave.
 from __future__ import annotations
 
 import json
@@ -10,7 +11,7 @@ from .paper_index import SearchHit
 
 DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 OLLAMA_URL = os.environ.get("OLLAMA_URL", os.environ.get("OLLAMA_HOST", DEFAULT_OLLAMA_URL))
-
+# This template gives the model very specific instructions on how to behave.
 REFUSAL_TEXT = "The paper does not provide enough information to answer that question."
 SYSTEM_PROMPT = (
     "You answer questions about a single academic paper. Use only the provided paper excerpts. "

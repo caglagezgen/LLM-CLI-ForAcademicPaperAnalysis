@@ -296,7 +296,7 @@ uv run paper-qa ask "What does the paper say about marine biology field sampling
 
 Expected outcome: the CLI should refuse because the paper does not cover that topic.
 
-5. Dry-run 
+5. Dry-run
 
 ```bash
 uv run paper-qa ask "What differences does the paper identify between LLM systems and agentic AI systems?" --dry-run
@@ -308,3 +308,48 @@ uv run paper-qa ask "What differences does the paper identify between LLM system
 - it proves retrieval happens before answer generation
 - it shows exactly what evidence the system found in the paper
 - it helps to explain grounding very clearly in class
+
+## Cloud Deployment Demo (Google Cloud)
+
+This section outlines how to run the complete project on a cloud VM, demonstrating real-world deployment trade-offs between model size and hardware constraints. This setup uses a standard `e2-standard-2` VM on Google Cloud.
+
+### 1. Initial VM Setup
+
+Connect to your cloud VM and ensure the environment is ready.
+
+```bash
+# Connect to your VM instance
+gcloud compute ssh your-instance-name --zone your-zone
+
+# Clone the repository for the first time
+git clone https://github.com/caglagezgen/LLM-CLI-ForAcademicPaperAnalysis.git
+cd LLM-CLI-ForAcademicPaperAnalysis
+
+# Ensure Docker service is running
+sudo systemctl start docker
+```
+
+### 2. Start Services and Prepare Models
+
+Start the Ollama service in the background and download the models we will compare.
+
+```bash
+# Start the Ollama service in detached mode
+sudo docker-compose up -d ollama
+
+
+# Pull the small, fast model for low-resource environments(Current VM's has memory limit so we will use a smaller model)
+sudo docker-compose exec ollama ollama pull tinyllama
+```
+
+Current VM's has memory limit so we will use a smaller model
+
+```bash
+# Run the same question with the small model
+sudo docker-compose run paper-qa ask --model tinyllama "What differences does the paper identify between LLM systems and agentic AI systems?"
+```
+
+```bash
+# Ask a question that is not in the paper
+sudo docker-compose run paper-qa ask --model tinyllama "What does the paper say about marine biology?"
+```

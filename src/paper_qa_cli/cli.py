@@ -201,7 +201,7 @@ def _build_parser() -> argparse.ArgumentParser:
     qa_parent.add_argument(
         "--min-score",
         type=float,
-        default=2.0,
+        default=10.0,
         help="Minimum retrieval score required before asking the model.",
     )
     qa_parent.add_argument(
